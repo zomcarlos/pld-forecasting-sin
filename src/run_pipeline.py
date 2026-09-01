@@ -21,7 +21,12 @@ SCRIPTS = [
     "rf_diario.py",
     "ml_diario.py",  # LightGBM
     "lstm_diario.py",
-    "gru_diario.py"
+    "gru_diario.py",
+    # Análises comparativas
+    "metricas_por_fold.py",
+    "diebold_mariano.py",
+    "diagnostico_avancado.py",
+    "intervalos_previsao.py",
 ]
 
 def main():
