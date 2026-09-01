@@ -1,0 +1,116 @@
+{
+    "model_name": "diagnostico_estatistico",
+    "environment": {
+        "timestamp": "2026-08-27T20:17:07.092792",
+        "python_version": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+        "os": "Linux",
+        "os_release": "7.0.0-30-generic",
+        "os_version": "#30-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 31 18:22:54 UTC 2026"
+    },
+    "packages": {
+        "numpy": "2.5.2",
+        "pandas": "3.0.5",
+        "sklearn": "1.9.0",
+        "statsmodels": "0.14.6",
+        "pmdarima": "2.1.1",
+        "lightgbm": "4.7.0",
+        "torch": "2.13.0+cpu"
+    },
+    "global_parameters": {
+        "SEASONAL_PERIOD": 7,
+        "EXOG_COLS": [
+            "ena",
+            "ear_pct",
+            "carga"
+        ]
+    },
+    "model_parameters": {
+        "adf_test": {
+            "autolag": "AIC",
+            "regression": "c"
+        },
+        "kpss_test": {
+            "regression": "ct",
+            "nlags": "auto"
+        },
+        "zivot_andrews_test": {
+            "autolag": "AIC"
+        },
+        "auto_arima": {
+            "seasonal": true,
+            "m": 7,
+            "stepwise": true,
+            "max_p": 2,
+            "max_q": 2,
+            "max_P": 1,
+            "max_Q": 1,
+            "max_d": 1,
+            "max_D": 1,
+            "test": "kpss",
+            "suppress_warnings": true,
+            "error_action": "ignore"
+        },
+        "sarimax": {
+            "enforce_stationarity": false,
+            "enforce_invertibility": false
+        },
+        "ljung_box": {
+            "lags": [
+                7,
+                14,
+                21,
+                30
+            ]
+        },
+        "acf_pacf": {
+            "lags": 40
+        },
+        "train_split": 0.8
+    },
+    "metrics": [
+        {
+            "submercado": "SUL",
+            "adf_pval_nivel": 0.0680955435559577,
+            "kpss_pval_nivel": 0.01,
+            "adf_pval_diff": 2.7467740394545422e-16,
+            "kpss_pval_diff": 0.1,
+            "ordem": "(2, 1, 1)x(1, 0, 1, 7)",
+            "aic": -1871.0246764717958,
+            "ljungbox_lag7_pval": 1.3957180699732153e-08,
+            "ljungbox_lag14_pval": 1.1146292945971509e-07
+        },
+        {
+            "submercado": "SUDESTE",
+            "adf_pval_nivel": 0.0630730562483279,
+            "kpss_pval_nivel": 0.01,
+            "adf_pval_diff": 1.385480438903552e-14,
+            "kpss_pval_diff": 0.1,
+            "ordem": "(2, 1, 1)x(1, 0, 1, 7)",
+            "aic": -1903.193794023951,
+            "ljungbox_lag7_pval": 3.717416896483142e-09,
+            "ljungbox_lag14_pval": 3.7753803048885774e-08
+        },
+        {
+            "submercado": "NORDESTE",
+            "adf_pval_nivel": 0.0723682453548467,
+            "kpss_pval_nivel": 0.01,
+            "adf_pval_diff": 2.6502001216360675e-16,
+            "kpss_pval_diff": 0.021355124922839936,
+            "ordem": "(2, 1, 1)x(1, 0, 1, 7)",
+            "aic": -1378.056462362181,
+            "ljungbox_lag7_pval": 4.524156343021963e-05,
+            "ljungbox_lag14_pval": 0.0005270291472575849
+        },
+        {
+            "submercado": "NORTE",
+            "adf_pval_nivel": 0.03927077374922594,
+            "kpss_pval_nivel": 0.01,
+            "adf_pval_diff": 2.131538047350829e-16,
+            "kpss_pval_diff": 0.05214956850423099,
+            "ordem": "(2, 1, 1)x(1, 0, 1, 7)",
+            "aic": -1360.0126784729473,
+            "ljungbox_lag7_pval": 0.00012704549994267892,
+            "ljungbox_lag14_pval": 0.00020512933981180407
+        }
+    ]
+}

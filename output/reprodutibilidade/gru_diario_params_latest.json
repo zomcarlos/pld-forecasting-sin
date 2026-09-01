@@ -1,0 +1,63 @@
+{
+    "model_name": "gru_diario",
+    "environment": {
+        "timestamp": "2026-09-01T19:34:04.958018",
+        "python_version": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+        "os": "Linux",
+        "os_release": "7.0.0-30-generic",
+        "os_version": "#30-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 31 18:22:54 UTC 2026"
+    },
+    "packages": {
+        "numpy": "2.5.2",
+        "pandas": "3.0.5",
+        "sklearn": "1.9.0",
+        "statsmodels": "0.14.6",
+        "pmdarima": "2.1.1",
+        "lightgbm": "4.7.0",
+        "torch": "2.13.0+cpu"
+    },
+    "global_parameters": {
+        "TEST_SIZE": 30,
+        "N_SPLITS": 4
+    },
+    "model_parameters": {
+        "model_type": "GRU Neural Network",
+        "gru_hyperparameters": {
+            "epochs": 100,
+            "patience": 15,
+            "batch_size": 32,
+            "hidden_size": 64,
+            "num_layers": 2,
+            "dropout": 0.2,
+            "learning_rate": 0.001,
+            "optimizer": "Adam",
+            "loss_function": "MSELoss"
+        }
+    },
+    "metrics": [
+        {
+            "submercado": "SUL",
+            "mae": 26.74011576504178,
+            "rmse": 34.2871538826854,
+            "mape": 13.83879173133251
+        },
+        {
+            "submercado": "SUDESTE",
+            "mae": 17.528650762769903,
+            "rmse": 23.576714529169937,
+            "mape": 10.357212900204592
+        },
+        {
+            "submercado": "NORDESTE",
+            "mae": 36.663249446021176,
+            "rmse": 44.30205879304261,
+            "mape": 22.368961941163928
+        },
+        {
+            "submercado": "NORTE",
+            "mae": 23.816278767479787,
+            "rmse": 30.609096156270176,
+            "mape": 16.17557717985799
+        }
+    ]
+}

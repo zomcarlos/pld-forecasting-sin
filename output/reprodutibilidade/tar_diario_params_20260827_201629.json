@@ -1,0 +1,58 @@
+{
+    "model_name": "tar_diario",
+    "environment": {
+        "timestamp": "2026-08-27T20:16:29.728096",
+        "python_version": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+        "os": "Linux",
+        "os_release": "7.0.0-30-generic",
+        "os_version": "#30-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 31 18:22:54 UTC 2026"
+    },
+    "packages": {
+        "numpy": "2.5.2",
+        "pandas": "3.0.5",
+        "sklearn": "1.9.0",
+        "statsmodels": "0.14.6",
+        "pmdarima": "2.1.1",
+        "lightgbm": "4.7.0",
+        "torch": "2.13.0+cpu"
+    },
+    "global_parameters": {
+        "TEST_SIZE": 30,
+        "N_SPLITS": 4
+    },
+    "model_parameters": {
+        "model_type": "Threshold Autoregressive (TAR)",
+        "threshold_variable": "ear_pct",
+        "threshold_value": 30.0,
+        "internal_regressor": "Ridge",
+        "ridge_hyperparameters": {
+            "alpha": 1.0
+        }
+    },
+    "metrics": [
+        {
+            "submercado": "SUL",
+            "mae": 27.678203570366207,
+            "rmse": 36.480453210561535,
+            "mape": 14.015694465203065
+        },
+        {
+            "submercado": "SUDESTE",
+            "mae": 18.077145438271796,
+            "rmse": 24.060818334424788,
+            "mape": 10.823097604991291
+        },
+        {
+            "submercado": "NORDESTE",
+            "mae": 20.93046871335912,
+            "rmse": 27.309855517678166,
+            "mape": 14.885385865019794
+        },
+        {
+            "submercado": "NORTE",
+            "mae": 21.356636843279404,
+            "rmse": 27.853298960184624,
+            "mape": 15.385577998797215
+        }
+    ]
+}

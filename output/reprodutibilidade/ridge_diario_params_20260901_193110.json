@@ -1,0 +1,57 @@
+{
+    "model_name": "ridge_diario",
+    "environment": {
+        "timestamp": "2026-09-01T19:31:10.970931",
+        "python_version": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+        "os": "Linux",
+        "os_release": "7.0.0-30-generic",
+        "os_version": "#30-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 31 18:22:54 UTC 2026"
+    },
+    "packages": {
+        "numpy": "2.5.2",
+        "pandas": "3.0.5",
+        "sklearn": "1.9.0",
+        "statsmodels": "0.14.6",
+        "pmdarima": "2.1.1",
+        "lightgbm": "4.7.0",
+        "torch": "2.13.0+cpu"
+    },
+    "global_parameters": {
+        "TEST_SIZE": 30,
+        "N_SPLITS": 4
+    },
+    "model_parameters": {
+        "model_type": "Ridge Regression",
+        "scaler": "StandardScaler",
+        "ridge_hyperparameters": {
+            "alpha": 1.0,
+            "random_state": 42
+        }
+    },
+    "metrics": [
+        {
+            "submercado": "SUL",
+            "mae": 22.149057577345147,
+            "rmse": 30.03818858986511,
+            "mape": 11.988622580351695
+        },
+        {
+            "submercado": "SUDESTE",
+            "mae": 18.04779948141401,
+            "rmse": 24.022569738435674,
+            "mape": 10.854847691267576
+        },
+        {
+            "submercado": "NORDESTE",
+            "mae": 20.973130686975928,
+            "rmse": 27.272659940423953,
+            "mape": 14.95547110024094
+        },
+        {
+            "submercado": "NORTE",
+            "mae": 21.53633645671269,
+            "rmse": 27.921762136583304,
+            "mape": 15.419298754932528
+        }
+    ]
+}

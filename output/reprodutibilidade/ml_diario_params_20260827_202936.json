@@ -1,0 +1,63 @@
+{
+    "model_name": "ml_diario",
+    "environment": {
+        "timestamp": "2026-08-27T20:29:36.960263",
+        "python_version": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+        "os": "Linux",
+        "os_release": "7.0.0-30-generic",
+        "os_version": "#30-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 31 18:22:54 UTC 2026"
+    },
+    "packages": {
+        "numpy": "2.5.2",
+        "pandas": "3.0.5",
+        "sklearn": "1.9.0",
+        "statsmodels": "0.14.6",
+        "pmdarima": "2.1.1",
+        "lightgbm": "4.7.0",
+        "torch": "2.13.0+cpu"
+    },
+    "global_parameters": {
+        "TEST_SIZE": 30,
+        "N_SPLITS": 4
+    },
+    "model_parameters": {
+        "model_type": "LightGBM Regressor",
+        "lgb_hyperparameters": {
+            "objective": "regression",
+            "metric": "mae",
+            "n_estimators": 500,
+            "learning_rate": 0.05,
+            "num_leaves": 31,
+            "max_depth": -1,
+            "random_state": 42,
+            "n_jobs": -1,
+            "early_stopping_rounds": 30
+        }
+    },
+    "metrics": [
+        {
+            "submercado": "SUL",
+            "mae": 25.98532452118258,
+            "rmse": 32.752419273321905,
+            "mape": 14.117304836035949
+        },
+        {
+            "submercado": "SUDESTE",
+            "mae": 20.618034255003952,
+            "rmse": 26.27875429218512,
+            "mape": 12.35087294721082
+        },
+        {
+            "submercado": "NORDESTE",
+            "mae": 25.30307357200333,
+            "rmse": 31.995706846122534,
+            "mape": 17.41394052395812
+        },
+        {
+            "submercado": "NORTE",
+            "mae": 26.19200144817979,
+            "rmse": 32.82838821911089,
+            "mape": 18.958397174349287
+        }
+    ]
+}

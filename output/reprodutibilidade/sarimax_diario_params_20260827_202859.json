@@ -1,0 +1,82 @@
+{
+    "model_name": "sarimax_diario",
+    "environment": {
+        "timestamp": "2026-08-27T20:28:59.736252",
+        "python_version": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+        "os": "Linux",
+        "os_release": "7.0.0-30-generic",
+        "os_version": "#30-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 31 18:22:54 UTC 2026"
+    },
+    "packages": {
+        "numpy": "2.5.2",
+        "pandas": "3.0.5",
+        "sklearn": "1.9.0",
+        "statsmodels": "0.14.6",
+        "pmdarima": "2.1.1",
+        "lightgbm": "4.7.0",
+        "torch": "2.13.0+cpu"
+    },
+    "global_parameters": {
+        "TEST_SIZE": 30,
+        "N_SPLITS": 4,
+        "SEASONAL_PERIOD": 7,
+        "EXOG_COLS": [
+            "ena",
+            "ear_pct",
+            "carga"
+        ]
+    },
+    "model_parameters": {
+        "model_type": "SARIMAX",
+        "auto_arima_selection": {
+            "max_p": 2,
+            "max_q": 2,
+            "max_P": 1,
+            "max_Q": 1,
+            "max_d": 1,
+            "max_D": 1,
+            "seasonal": true,
+            "m": 7,
+            "stepwise": true,
+            "suppress_warnings": true,
+            "error_action": "ignore"
+        },
+        "sarimax_fit": {
+            "enforce_stationarity": false,
+            "enforce_invertibility": false
+        },
+        "forecast": {
+            "alpha": 0.05
+        }
+    },
+    "metrics": [
+        {
+            "submercado": "SUL",
+            "mae": 42.15355307173612,
+            "rmse": 52.5661112389195,
+            "mape": 22.758639860857617,
+            "order": "(2, 1, 1)(1, 0, 1, 7)"
+        },
+        {
+            "submercado": "SUDESTE",
+            "mae": 35.70217616005006,
+            "rmse": 43.45587101334369,
+            "mape": 22.175723970133568,
+            "order": "(2, 1, 1)(1, 0, 1, 7)"
+        },
+        {
+            "submercado": "NORDESTE",
+            "mae": 37.38382946588641,
+            "rmse": 43.89142697392745,
+            "mape": 32.27625717224616,
+            "order": "(1, 1, 2)(1, 0, 1, 7)"
+        },
+        {
+            "submercado": "NORTE",
+            "mae": 43.597787682310205,
+            "rmse": 52.07367833630276,
+            "mape": 37.75960525559792,
+            "order": "(2, 1, 2)(1, 0, 1, 7)"
+        }
+    ]
+}
