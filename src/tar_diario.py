@@ -24,6 +24,8 @@ warnings.filterwarnings("ignore")
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
+PRED_DIR = OUTPUT_DIR / 'predictions'
+PRED_DIR.mkdir(parents=True, exist_ok=True)
 
 TEST_SIZE = 30
 N_SPLITS = 4
@@ -95,6 +97,12 @@ def run_tar_for_submercado(submercado: str):
         
         y_pred = np.exp(y_pred_log)
         y_true = np.exp(y_test.values)
+        pd.DataFrame({
+            "data": X_test.index.strftime("%Y-%m-%d"),
+            "real": y_true,
+            "previsto": y_pred
+        }).to_csv(PRED_DIR / f"tar_{submercado}_fold{fold+1}.csv", sep=";", index=False)
+
 
         fold_mae = mean_absolute_error(y_true, y_pred)
         fold_rmse = root_mean_squared_error(y_true, y_pred)

@@ -30,6 +30,8 @@ warnings.filterwarnings("ignore")
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
+PRED_DIR = OUTPUT_DIR / 'predictions'
+PRED_DIR.mkdir(parents=True, exist_ok=True)
 
 # Horizonte de 30 dias por fold simula o planejamento operacional mensal
 TEST_SIZE = 30
@@ -123,6 +125,12 @@ def run_sarimax_for_submercado(submercado: str):
         y_true = np.exp(test_pld.values)
         y_lower = np.exp(ci_log.iloc[:, 0].values)
         y_upper = np.exp(ci_log.iloc[:, 1].values)
+        pd.DataFrame({
+            "data": test_pld.index.strftime("%Y-%m-%d"),
+            "real": y_true,
+            "previsto": y_pred
+        }).to_csv(PRED_DIR / f"sarimax_{submercado}_fold{fold+1}.csv", sep=";", index=False)
+
 
         fold_mae = mean_absolute_error(y_true, y_pred)
         fold_rmse = root_mean_squared_error(y_true, y_pred)
