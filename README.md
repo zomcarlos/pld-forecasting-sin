@@ -2,7 +2,7 @@
 
 Comparação de modelos econométricos e de aprendizado de máquina para previsão diária do Preço de Liquidação das Diferenças (PLD) nos quatro submercados do Sistema Interligado Nacional (SIN) brasileiro.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1234567.svg)](https://doi.org/10.5281/zenodo.1234567)
+
 
 ## Modelos avaliados
 
