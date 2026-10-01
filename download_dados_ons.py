@@ -1,5 +1,6 @@
+import json
+import ssl
 import urllib.request
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -51,7 +52,50 @@ def download_files():
             else:
                 print(f"  {name} {ano} já existe.")
 
-    print("\nDownload concluído! Lembre-se de adicionar os arquivos do PLD (CCEE) na pasta dados/PLD/ caso deseje alinhar as datas.")
+    # Download do PLD_HORARIO (CCEE)
+    pld_dir = DADOS_DIR / "PLD"
+    pld_dir.mkdir(parents=True, exist_ok=True)
+    print("\nIniciando download dos dados do PLD (CCEE)...")
+
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3',
+    }
+
+    try:
+        req = urllib.request.Request(
+            'https://dadosabertos.ccee.org.br/api/3/action/package_show?id=pld_horario',
+            headers=headers
+        )
+        with urllib.request.urlopen(req, context=ctx, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+            resources = data.get('result', {}).get('resources', [])
+
+        for res in resources:
+            name = res.get('name', '')
+            url = res.get('url', '')
+            if name.startswith('pld_horario_'):
+                dest = pld_dir / f"{name}.csv"
+                if not dest.exists():
+                    print(f"  Baixando PLD {name}...")
+                    try:
+                        r_file = urllib.request.Request(url, headers=headers)
+                        with urllib.request.urlopen(r_file, context=ctx) as r_resp, open(dest, 'wb') as out:
+                            out.write(r_resp.read())
+                    except Exception as e:
+                        print(f"    Erro ao baixar {name}: {e}")
+                else:
+                    print(f"  PLD {name} já existe.")
+    except Exception as e:
+        print(f"  Erro ao consultar API da CCEE: {e}")
+
+    print("\nDownload de todos os dados concluído com sucesso!")
 
 if __name__ == "__main__":
     download_files()
+
