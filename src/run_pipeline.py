@@ -15,6 +15,7 @@ SRC_DIR = BASE_DIR / "src"
 # Ordem de execução: Diagnósticos primeiro, baselines, ML, e Deep Learning.
 SCRIPTS = [
     "diagnostico_estatistico.py",
+    "naive_diario.py",
     "sarimax_diario.py",
     "tar_diario.py",
     "ridge_diario.py",

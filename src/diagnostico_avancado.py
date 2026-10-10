@@ -11,7 +11,7 @@ OUTPUT_DIR = BASE_DIR / "output" / "diagnosticos"
 OUTPUT_FILE = OUTPUT_DIR / "residuals_advanced.csv"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-MODELS = ["sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
+MODELS = ["naive_rw", "naive_seasonal", "sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
 SUBMERCADOS = ["SUL", "SUDESTE", "NORDESTE", "NORTE"]
 FOLDS = 4
 

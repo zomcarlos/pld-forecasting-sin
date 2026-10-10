@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PRED_DIR = BASE_DIR / "output" / "predictions"
 OUTPUT_FILE = BASE_DIR / "output" / "cv_metrics.csv"
 
-MODELS = ["sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
+MODELS = ["naive_rw", "naive_seasonal", "sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
 SUBMERCADOS = ["SUL", "SUDESTE", "NORDESTE", "NORTE"]
 FOLDS = 4
 
