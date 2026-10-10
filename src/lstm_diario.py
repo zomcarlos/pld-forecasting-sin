@@ -173,65 +173,49 @@ def run_lstm_for_submercado(submercado: str):
         train_dataset = TensorDataset(X_tr_t, y_tr_t)
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
-        model = LSTMModel(input_size=len(feature_cols), hidden_size=hidden_size, num_layers=num_layers, dropout=dropout).to(device)
-        criterion = nn.MSELoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-        best_val_loss = np.inf
-        patience_counter = 0
+        best_global_val_loss = np.inf
         best_model_weights = None
-        
-        train_losses = []
-        val_losses = []
+        best_hidden_size = hidden_size
 
-        # Loop de treinamento por épocas
-        for epoch in range(epochs):
-            model.train()
-            epoch_train_loss = 0.0
-            for batch_X, batch_y in train_loader:
-                optimizer.zero_grad()
-                outputs = model(batch_X)
-                loss = criterion(outputs, batch_y)
-                loss.backward()
-                optimizer.step()
-                epoch_train_loss += loss.item() * batch_X.size(0)
-            
-            epoch_train_loss /= len(train_loader.dataset)
-            train_losses.append(epoch_train_loss)
-            
-            # Avaliação no conjunto de validação
-            model.eval()
-            with torch.no_grad():
-                val_outputs = model(X_val_t)
-                val_loss = criterion(val_outputs, y_val_t).item()
-                val_losses.append(val_loss)
-            
-            # Early Stopping interrompe se a perda na validação não melhorar após "patience" rodadas
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                best_model_weights = copy.deepcopy(model.state_dict())
-                patience_counter = 0
-            else:
-                patience_counter += 1
-                
-            if patience_counter >= patience:
-                break
-        
-        # Gera gráfico mostrando a evolução da perda (treinamento e validação) apenas no último fold
-        if fold == N_SPLITS - 1:
-            fig, ax = plt.subplots(figsize=(8, 5))
-            ax.plot(train_losses, label='Treinamento (Train)')
-            ax.plot(val_losses, label='Validação (Val)')
-            ax.set_title(f'Curvas de Perda (Loss) - LSTM Fold {fold+1} ({submercado})')
-            ax.set_xlabel('Épocas')
-            ax.set_ylabel('MSE Loss')
-            ax.legend()
-            ax.grid(True, linestyle='--', alpha=0.5)
-            fig.tight_layout()
-            fig.savefig(OUTPUT_DIR / f'lstm_loss_{submercado}.png', dpi=150)
-            plt.close(fig)
-            
-        # Carrega os pesos do melhor momento no early stopping
+        for hs in [32, 64]:
+            for lr in [0.001, 0.005]:
+                cand_model = LSTMModel(input_size=len(feature_cols), hidden_size=hs, num_layers=num_layers, dropout=dropout).to(device)
+                cand_criterion = nn.MSELoss()
+                cand_optimizer = optim.Adam(cand_model.parameters(), lr=lr)
+                cand_patience_counter = 0
+                cand_best_val_loss = np.inf
+                cand_best_weights = None
+
+                for epoch in range(epochs):
+                    cand_model.train()
+                    for batch_X, batch_y in train_loader:
+                        cand_optimizer.zero_grad()
+                        outputs = cand_model(batch_X)
+                        loss = cand_criterion(outputs, batch_y)
+                        loss.backward()
+                        cand_optimizer.step()
+                    
+                    cand_model.eval()
+                    with torch.no_grad():
+                        val_outputs = cand_model(X_val_t)
+                        val_loss = cand_criterion(val_outputs, y_val_t).item()
+                    
+                    if val_loss < cand_best_val_loss:
+                        cand_best_val_loss = val_loss
+                        cand_best_weights = copy.deepcopy(cand_model.state_dict())
+                        cand_patience_counter = 0
+                    else:
+                        cand_patience_counter += 1
+
+                    if cand_patience_counter >= patience:
+                        break
+
+                if cand_best_val_loss < best_global_val_loss:
+                    best_global_val_loss = cand_best_val_loss
+                    best_model_weights = cand_best_weights
+                    best_hidden_size = hs
+
+        model = LSTMModel(input_size=len(feature_cols), hidden_size=best_hidden_size, num_layers=num_layers, dropout=dropout).to(device)
         model.load_state_dict(best_model_weights)
         model.eval()
         with torch.no_grad():

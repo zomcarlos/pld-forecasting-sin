@@ -98,13 +98,26 @@ def run_ml_for_submercado(submercado: str):
         X_tr, y_tr = X_train.iloc[:-val_size], y_train.iloc[:-val_size]
         X_val, y_val = X_train.iloc[-val_size:], y_train.iloc[-val_size:]
 
-        model = lgb.LGBMRegressor(**params)
-        model.fit(
-            X_tr, y_tr,
-            eval_set=[(X_val, y_val)],
-            callbacks=[lgb.early_stopping(30, verbose=False)],  # Interrompe o treino se a perda na validação não cair por 30 rodadas
-        )
+        best_val_score = float("inf")
+        best_model = None
+        for lr in [0.01, 0.05, 0.1]:
+            for nl in [15, 31, 63]:
+                candidate_params = dict(params)
+                candidate_params["learning_rate"] = lr
+                candidate_params["num_leaves"] = nl
+                candidate_model = lgb.LGBMRegressor(**candidate_params)
+                candidate_model.fit(
+                    X_tr, y_tr,
+                    eval_set=[(X_val, y_val)],
+                    callbacks=[lgb.early_stopping(30, verbose=False)],
+                )
+                val_preds = candidate_model.predict(X_val)
+                val_mae = mean_absolute_error(y_val, val_preds)
+                if val_mae < best_val_score:
+                    best_val_score = val_mae
+                    best_model = candidate_model
 
+        model = best_model
         y_pred_log = model.predict(X_test)
 
         # Reverter log

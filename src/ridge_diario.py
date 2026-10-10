@@ -70,10 +70,17 @@ def run_ridge_for_submercado(submercado: str):
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # alpha=1.0 controla a intensidade da regularização L2 (encolhimento dos coeficientes)
-        model = Ridge(alpha=1.0, random_state=42)
-        model.fit(X_train_scaled, y_train)
-
+        from sklearn.model_selection import GridSearchCV
+        param_grid = {"alpha": [0.01, 0.1, 1.0, 10.0, 100.0]}
+        grid = GridSearchCV(
+            Ridge(random_state=42),
+            param_grid=param_grid,
+            cv=TimeSeriesSplit(n_splits=3),
+            scoring="neg_mean_absolute_error",
+            n_jobs=-1,
+        )
+        grid.fit(X_train_scaled, y_train)
+        model = grid.best_estimator_
         y_pred_log = model.predict(X_test_scaled)
 
         y_pred = np.exp(y_pred_log)

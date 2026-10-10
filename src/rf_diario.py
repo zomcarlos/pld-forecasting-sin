@@ -64,10 +64,17 @@ def run_rf_for_submercado(submercado: str):
         X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
         X_test, y_test = X.iloc[test_idx], y.iloc[test_idx]
 
-        # 200 árvores para estabilizar variância do ensemble; semente fixa para reprodutibilidade
-        model = RandomForestRegressor(n_estimators=200, random_state=42, n_jobs=-1)
-        model.fit(X_train, y_train)
-
+        from sklearn.model_selection import GridSearchCV
+        param_grid = {"n_estimators": [100, 200], "max_depth": [None, 10, 20]}
+        grid = GridSearchCV(
+            RandomForestRegressor(random_state=42, n_jobs=-1),
+            param_grid=param_grid,
+            cv=TimeSeriesSplit(n_splits=3),
+            scoring="neg_mean_absolute_error",
+            n_jobs=-1,
+        )
+        grid.fit(X_train, y_train)
+        model = grid.best_estimator_
         y_pred_log = model.predict(X_test)
 
         # Reverte transformação log para avaliar métricas na escala original (R$/MWh)
