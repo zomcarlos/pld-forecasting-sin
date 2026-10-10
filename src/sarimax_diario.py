@@ -111,20 +111,28 @@ def run_sarimax_for_submercado(submercado: str):
         )
         fitted = model.fit(disp=False)
 
-        # Previsão pontual e intervalos de confiança de 95% (alpha=0.05)
-        forecast_result = fitted.get_forecast(
-            steps=TEST_SIZE,
-            exog=test_exog.values,
-        )
-        y_pred_log = forecast_result.predicted_mean.values
-        ci_log = forecast_result.conf_int(alpha=0.05)
-
-        # Reverter log
-        # Retorno à escala original (R$/MWh) para cálculo das métricas de erro
-        y_pred = np.exp(y_pred_log)
+        # Previsão iterativa 1 passo à frente (D+1)
+        y_pred_log_list = []
+        lower_list = []
+        upper_list = []
+        
+        current_res = fitted
+        
+        for i in range(TEST_SIZE):
+            fcst = current_res.get_forecast(steps=1, exog=test_exog.iloc[i:i+1].values)
+            y_pred_log_list.append(fcst.predicted_mean.values[0])
+            ci = fcst.conf_int(alpha=0.05)
+            lower_list.append(ci.iloc[0, 0])
+            upper_list.append(ci.iloc[0, 1])
+            
+            # Atualizar com o valor real para o próximo passo (D+1)
+            current_res = current_res.extend(endog=test_pld.iloc[i:i+1].values, exog=test_exog.iloc[i:i+1].values)
+            
+        y_pred_log = np.array(y_pred_log_list)
         y_true = np.exp(test_pld.values)
-        y_lower = np.exp(ci_log.iloc[:, 0].values)
-        y_upper = np.exp(ci_log.iloc[:, 1].values)
+        y_pred = np.exp(y_pred_log)
+        y_lower = np.exp(np.array(lower_list))
+        y_upper = np.exp(np.array(upper_list))
         pd.DataFrame({
             "data": test_pld.index.strftime("%Y-%m-%d"),
             "real": y_true,
@@ -224,6 +232,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-## GRETL -> software para verificação
-## ALUNO OUVINTE MESTRADO SÉRIES TEMPORAIS

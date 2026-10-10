@@ -24,6 +24,17 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
+import random
+import torch
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(SEED)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 from sklearn.model_selection import TimeSeriesSplit
 
 import torch
@@ -129,15 +140,36 @@ def run_gru_for_submercado(submercado: str):
         X_val_scaled = scaler.transform(X_val)
         X_test_scaled = scaler.transform(X_test)
 
-        # Reshape para tensor 3D: (samples, seq_len=1, features)
-        # Necessário pois a GRU aguarda um dado sequencial, aqui interpretamos o vetor tubular instantâneo como seq_len=1
-        X_tr_t = torch.tensor(X_tr_scaled, dtype=torch.float32).unsqueeze(1).to(device)
+        seq_len = 7
+        # Empilhamento temporário para montar as janelas contínuas de 7 dias
+        X_all_scaled = np.vstack((X_tr_scaled, X_val_scaled, X_test_scaled))
+        
+        X_seq = []
+        for i in range(len(X_all_scaled)):
+            if i < seq_len - 1:
+                pad_size = seq_len - 1 - i
+                pad = np.repeat(X_all_scaled[0:1], pad_size, axis=0)
+                seq = np.vstack((pad, X_all_scaled[:i+1]))
+            else:
+                seq = X_all_scaled[i - seq_len + 1 : i + 1]
+            X_seq.append(seq)
+        X_seq = np.array(X_seq)
+        
+        n_tr = len(X_tr_scaled)
+        n_val = len(X_val_scaled)
+        
+        X_tr_seq = X_seq[:n_tr]
+        X_val_seq = X_seq[n_tr : n_tr + n_val]
+        X_test_seq = X_seq[n_tr + n_val :]
+
+        # Conversão para tensores 3D apropriados para GRU/BPTT: (samples, seq_len=7, features)
+        X_tr_t = torch.tensor(X_tr_seq, dtype=torch.float32).to(device)
         y_tr_t = torch.tensor(y_tr.values, dtype=torch.float32).unsqueeze(1).to(device)
         
-        X_val_t = torch.tensor(X_val_scaled, dtype=torch.float32).unsqueeze(1).to(device)
+        X_val_t = torch.tensor(X_val_seq, dtype=torch.float32).to(device)
         y_val_t = torch.tensor(y_val.values, dtype=torch.float32).unsqueeze(1).to(device)
 
-        X_test_t = torch.tensor(X_test_scaled, dtype=torch.float32).unsqueeze(1).to(device)
+        X_test_t = torch.tensor(X_test_seq, dtype=torch.float32).to(device)
         
         train_dataset = TensorDataset(X_tr_t, y_tr_t)
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
