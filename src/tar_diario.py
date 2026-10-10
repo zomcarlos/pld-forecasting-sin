@@ -28,7 +28,7 @@ PRED_DIR = OUTPUT_DIR / 'predictions'
 PRED_DIR.mkdir(parents=True, exist_ok=True)
 
 TEST_SIZE = 30
-N_SPLITS = 4
+N_SPLITS = 12
 
 class ThresholdRegressor:
     """Modelo econométrico de Regime Switching Observável (Threshold Regression)."""

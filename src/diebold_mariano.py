@@ -11,7 +11,7 @@ OUTPUT_FILE = BASE_DIR / "output" / "dm_test_results.csv"
 
 MODELS = ["naive_rw", "naive_seasonal", "sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
 SUBMERCADOS = ["SUL", "SUDESTE", "NORDESTE", "NORTE"]
-FOLDS = 4
+FOLDS = 12
 
 def diebold_mariano(e1, e2, h=1, criterion="MAE"):
     """

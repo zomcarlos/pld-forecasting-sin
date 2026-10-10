@@ -9,7 +9,7 @@ OUTPUT_FILE = BASE_DIR / "output" / "cv_metrics.csv"
 
 MODELS = ["naive_rw", "naive_seasonal", "sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
 SUBMERCADOS = ["SUL", "SUDESTE", "NORDESTE", "NORTE"]
-FOLDS = 4
+FOLDS = 12
 
 def compute_mape(y_true, y_pred):
     y_true, y_pred = np.array(y_true), np.array(y_pred)

@@ -4,10 +4,13 @@ Pipeline Central de Execução v4.
 Executa todos os modelos e diagnósticos estatísticos de forma sequencial
 para garantir a reprodutibilidade integral do experimento.
 """
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+os.environ["PYTHONWARNINGS"] = "ignore"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = BASE_DIR / "src"

@@ -9,7 +9,7 @@ OUTPUT_DIR = BASE_DIR / "output"
 
 MODELS = ["naive_rw", "naive_seasonal", "sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
 SUBMERCADOS = ["SUL", "SUDESTE", "NORDESTE", "NORTE"]
-FOLDS = 4
+FOLDS = 12
 
 def main():
     if not PRED_DIR.exists():

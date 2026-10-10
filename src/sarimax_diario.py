@@ -35,7 +35,7 @@ PRED_DIR.mkdir(parents=True, exist_ok=True)
 
 # Horizonte de 30 dias por fold simula o planejamento operacional mensal
 TEST_SIZE = 30
-N_SPLITS = 4
+N_SPLITS = 12
 # Sazonalidade semanal (padrão de consumo dias úteis vs. fins de semana)
 SEASONAL_PERIOD = 7
 

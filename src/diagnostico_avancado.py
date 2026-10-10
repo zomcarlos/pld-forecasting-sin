@@ -13,7 +13,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 MODELS = ["naive_rw", "naive_seasonal", "sarimax", "tar", "ridge", "rf", "lightgbm", "lstm", "gru"]
 SUBMERCADOS = ["SUL", "SUDESTE", "NORDESTE", "NORTE"]
-FOLDS = 4
+FOLDS = 12
 
 def main():
     if not PRED_DIR.exists():
