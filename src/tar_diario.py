@@ -97,6 +97,11 @@ def run_tar_for_submercado(submercado: str):
         
         y_pred = np.exp(y_pred_log)
         y_true = np.exp(y_test.values)
+        
+        test_piso = X_test["pld_piso"].values
+        test_teto = X_test["pld_teto"].values
+        y_pred = np.clip(y_pred, test_piso, test_teto)
+        
         pd.DataFrame({
             "data": X_test.index.strftime("%Y-%m-%d"),
             "real": y_true,

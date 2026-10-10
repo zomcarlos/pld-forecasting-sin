@@ -74,8 +74,33 @@ def run_rf_for_submercado(submercado: str):
             n_jobs=-1,
         )
         grid.fit(X_train, y_train)
-        model = grid.best_estimator_
-        y_pred_log = model.predict(X_test)
+        best_reg = grid.best_estimator_
+        
+        # Extrai hiperparâmetros para treinar o classificador e regressor em duas etapas
+        best_params = best_reg.get_params()
+        
+        # Classificador não suporta criterion de regressão (ex: squared_error, absolute_error)
+        clf_params = dict(best_params)
+        if "criterion" in clf_params:
+            del clf_params["criterion"]
+            
+        from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+        final_clf = RandomForestClassifier(**clf_params)
+        final_reg = RandomForestRegressor(**best_params)
+        
+        # Pega as colunas de piso/teto para o modelo Hurdle antes do Scaling
+        piso_train = X_train["pld_piso"].values
+        piso_test = X_test["pld_piso"].values
+        teto_test = X_test["pld_teto"].values
+        
+        from censored_models import TwoStageCensoredModel
+        model = TwoStageCensoredModel(final_clf, final_reg, target_is_log=True)
+        model.fit(X_train, y_train, piso_array=piso_train)
+        
+        y_pred_log = model.predict(X_test, piso_array=piso_test, teto_array=teto_test)
+        
+        # Variável para extrair importance (o regressor nativo ou classificador podem servir, mas usaremos do regressor para manter compatibilidade)
+        best_rf_estimator = final_reg
 
         # Reverte transformação log para avaliar métricas na escala original (R$/MWh)
         y_pred = np.exp(y_pred_log)
@@ -102,7 +127,7 @@ def run_rf_for_submercado(submercado: str):
         # Importância por redução média de impureza (Gini/MDI) acumulada em todas as árvores
         last_importance = pd.DataFrame({
             "feature": feature_cols,
-            "importance": model.feature_importances_,
+            "importance": best_rf_estimator.feature_importances_,
         }).sort_values("importance", ascending=False)
         
     all_y_pred = np.array(all_y_pred)

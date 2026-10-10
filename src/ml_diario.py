@@ -117,8 +117,25 @@ def run_ml_for_submercado(submercado: str):
                     best_val_score = val_mae
                     best_model = candidate_model
 
-        model = best_model
-        y_pred_log = model.predict(X_test)
+        # Extrai os parâmetros e o número de árvores calibrado pelo early stopping
+        best_params = best_model.get_params()
+        if hasattr(best_model, 'best_iteration_') and best_model.best_iteration_ is not None:
+            best_params["n_estimators"] = best_model.best_iteration_
+
+        final_clf = lgb.LGBMClassifier(**best_params)
+        final_reg = lgb.LGBMRegressor(**best_params)
+        
+        # Pega as colunas de piso/teto para o modelo Hurdle
+        piso_train = X_train["pld_piso"].values
+        piso_test = X_test["pld_piso"].values
+        teto_test = X_test["pld_teto"].values
+        
+        # Modelo Hurdle em Duas Etapas (Classificador Piso + Regressor Contínuo)
+        from censored_models import TwoStageCensoredModel
+        model = TwoStageCensoredModel(final_clf, final_reg, target_is_log=True)
+        model.fit(X_train, y_train, piso_array=piso_train)
+
+        y_pred_log = model.predict(X_test, piso_array=piso_test, teto_array=teto_test)
 
         # Reverter log
         y_pred = np.exp(y_pred_log)
@@ -145,7 +162,7 @@ def run_ml_for_submercado(submercado: str):
         # Importância calculada pelo número de vezes que cada feature foi usada nas divisões das árvores
         last_importance = pd.DataFrame({
             "feature": feature_cols,
-            "importance": model.feature_importances_,
+            "importance": final_reg.feature_importances_,
         }).sort_values("importance", ascending=False)
         
     all_y_pred = np.array(all_y_pred)

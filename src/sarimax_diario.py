@@ -131,8 +131,19 @@ def run_sarimax_for_submercado(submercado: str):
         y_pred_log = np.array(y_pred_log_list)
         y_true = np.exp(test_pld.values)
         y_pred = np.exp(y_pred_log)
+        
+        # Clipping para censura regulatória
+        test_piso = df_raw["pld_piso"].iloc[test_idx].values
+        test_teto = df_raw["pld_teto"].iloc[test_idx].values
+        y_pred = np.clip(y_pred, test_piso, test_teto)
+        
         y_lower = np.exp(np.array(lower_list))
         y_upper = np.exp(np.array(upper_list))
+        
+        # Clipping também para o intervalo de confiança
+        y_lower = np.clip(y_lower, test_piso, test_teto)
+        y_upper = np.clip(y_upper, test_piso, test_teto)
+        
         pd.DataFrame({
             "data": test_pld.index.strftime("%Y-%m-%d"),
             "real": y_true,

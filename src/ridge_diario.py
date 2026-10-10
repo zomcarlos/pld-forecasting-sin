@@ -80,8 +80,26 @@ def run_ridge_for_submercado(submercado: str):
             n_jobs=-1,
         )
         grid.fit(X_train_scaled, y_train)
-        model = grid.best_estimator_
-        y_pred_log = model.predict(X_test_scaled)
+        best_reg = grid.best_estimator_
+        
+        best_params = best_reg.get_params()
+        from sklearn.linear_model import RidgeClassifier, Ridge
+        
+        final_clf = RidgeClassifier(**best_params)
+        final_reg = Ridge(**best_params)
+        
+        # Pega as colunas de piso/teto da base NÃO normalizada
+        piso_train = X_train["pld_piso"].values
+        piso_test = X_test["pld_piso"].values
+        teto_test = X_test["pld_teto"].values
+        
+        from censored_models import TwoStageCensoredModel
+        model = TwoStageCensoredModel(final_clf, final_reg, target_is_log=True)
+        # Usamos a base escalonada (numpy array) no modelo, passando o array de piso por fora
+        model.fit(X_train_scaled, y_train, piso_array=piso_train)
+        
+        y_pred_log = model.predict(X_test_scaled, piso_array=piso_test, teto_array=teto_test)
+        best_ridge_estimator = final_reg
 
         y_pred = np.exp(y_pred_log)
         y_true = np.exp(y_test.values)
@@ -107,8 +125,8 @@ def run_ridge_for_submercado(submercado: str):
         # Magnitude indica força da feature; sinal indica direção do impacto no preço
         last_coef = pd.DataFrame({
             "feature": feature_cols,
-            "coef_abs": np.abs(model.coef_),
-            "coef": model.coef_
+            "coef_abs": np.abs(best_ridge_estimator.coef_),
+            "coef": best_ridge_estimator.coef_
         }).sort_values("coef_abs", ascending=False)
         
     all_y_pred = np.array(all_y_pred)

@@ -1,5 +1,6 @@
 import glob
 import pandas as pd
+import numpy as np
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,6 +14,15 @@ _CARGA_NAME_MAP = {
     "SUDESTE": "Sudeste/Centro-Oeste",
     "NORDESTE": "Nordeste",
     "NORTE": "Norte",
+}
+
+LIMITES_PLD = {
+    2021: {"piso": 49.77, "teto": 1128.72},
+    2022: {"piso": 55.70, "teto": 306.64},
+    2023: {"piso": 69.04, "teto": 620.95},
+    2024: {"piso": 61.07, "teto": 1470.57},
+    2025: {"piso": 58.60, "teto": 1421.87},
+    2026: {"piso": 57.31, "teto": 1611.04}
 }
 
 
@@ -123,6 +133,12 @@ def get_aligned_data(submercado: str) -> pd.DataFrame:
         "ear_pct": ear.loc[common_idx],
         "carga": carga.loc[common_idx],
     })
+    
+    # Injetar limites de PLD
+    years = df.index.year
+    df["pld_piso"] = df.index.to_series().apply(lambda d: LIMITES_PLD.get(d.year, {"piso": 0})["piso"])
+    df["pld_teto"] = df.index.to_series().apply(lambda d: LIMITES_PLD.get(d.year, {"teto": 9999})["teto"])
+    
     return df
 
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -168,4 +184,11 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     feat_df["day_of_year"] = feat_df.index.dayofyear
     feat_df["is_weekend"] = (feat_df.index.dayofweek >= 5).astype(int)
 
+    # --- Regime de Censura (Piso) ---
+    if "pld_piso" in feat_df.columns:
+        feat_df["dist_piso_lag_1"] = feat_df["pld_lag_1"] - feat_df["pld_piso"]
+        # Tolerância de 0.01 pois pld_medio pode ser marginalmente superior ao piso horário exato se ocorrer um spike numa única hora
+        feat_df["is_piso_lag_1"] = (feat_df["pld_lag_1"] <= feat_df["pld_piso"] + 0.01).astype(int)
+
     return feat_df
+
