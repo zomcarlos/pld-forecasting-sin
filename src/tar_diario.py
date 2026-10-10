@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import Ridge
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -32,29 +33,72 @@ N_SPLITS = 12
 
 class ThresholdRegressor:
     """Modelo econométrico de Regime Switching Observável (Threshold Regression)."""
-    def __init__(self, threshold_col="ear_pct", threshold_val=30.0, alpha=1.0):
+    def __init__(self, threshold_col="ear_pct", alpha=1.0, min_pct=0.15, max_pct=0.85):
         self.threshold_col = threshold_col
-        self.threshold_val = threshold_val
-        # Usamos Ridge (OLS regularizado) internamente para cada regime
-        # para garantir estabilidade caso um dos regimes tenha poucas amostras.
-        self.model_low = Ridge(alpha=alpha)
-        self.model_high = Ridge(alpha=alpha)
+        self.alpha = alpha
+        self.min_pct = min_pct
+        self.max_pct = max_pct
+        self.model_low = Ridge(alpha=self.alpha)
+        self.model_high = Ridge(alpha=self.alpha)
+        self.scaler_low = StandardScaler()
+        self.scaler_high = StandardScaler()
+        self.best_threshold = None
         
     def fit(self, X, y):
-        mask = X[self.threshold_col] < self.threshold_val
-        if mask.sum() > 0:
-            self.model_low.fit(X[mask], y[mask])
-        if (~mask).sum() > 0:
-            self.model_high.fit(X[~mask], y[~mask])
+        q = X[self.threshold_col].values
+        
+        # Grid search de Hansen (1999) para estimação de limiar
+        percentiles = np.linspace(self.min_pct, self.max_pct, num=50)
+        candidates = np.quantile(q, percentiles)
+        
+        best_ssr = np.inf
+        self.best_threshold = candidates[0]
+        
+        for gamma in candidates:
+            mask = q < gamma
+            if mask.sum() < 5 or (~mask).sum() < 5:
+                continue
+                
+            X_low, y_low = X[mask], y[mask]
+            X_high, y_high = X[~mask], y[~mask]
+            
+            sc_low = StandardScaler()
+            X_low_scaled = sc_low.fit_transform(X_low)
+            mod_low = Ridge(alpha=self.alpha).fit(X_low_scaled, y_low)
+            ssr_low = np.sum((y_low - mod_low.predict(X_low_scaled))**2)
+            
+            sc_high = StandardScaler()
+            X_high_scaled = sc_high.fit_transform(X_high)
+            mod_high = Ridge(alpha=self.alpha).fit(X_high_scaled, y_high)
+            ssr_high = np.sum((y_high - mod_high.predict(X_high_scaled))**2)
+            
+            ssr_total = ssr_low + ssr_high
+            if ssr_total < best_ssr:
+                best_ssr = ssr_total
+                self.best_threshold = gamma
+                
+        # Treinamento final com o limiar ótimo estimado
+        mask_final = q < self.best_threshold
+        if mask_final.sum() > 0:
+            X_low_final = self.scaler_low.fit_transform(X[mask_final])
+            self.model_low.fit(X_low_final, y[mask_final])
+        if (~mask_final).sum() > 0:
+            X_high_final = self.scaler_high.fit_transform(X[~mask_final])
+            self.model_high.fit(X_high_final, y[~mask_final])
+            
         return self
         
     def predict(self, X):
         pred = np.zeros(len(X))
-        mask = X[self.threshold_col] < self.threshold_val
+        mask = X[self.threshold_col].values < self.best_threshold
+        
         if mask.sum() > 0:
-            pred[mask] = self.model_low.predict(X[mask])
+            X_low_scaled = self.scaler_low.transform(X[mask])
+            pred[mask] = self.model_low.predict(X_low_scaled)
         if (~mask).sum() > 0:
-            pred[~mask] = self.model_high.predict(X[~mask])
+            X_high_scaled = self.scaler_high.transform(X[~mask])
+            pred[~mask] = self.model_high.predict(X_high_scaled)
+            
         return pred
 
 def mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -90,7 +134,7 @@ def run_tar_for_submercado(submercado: str):
         X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
         X_test, y_test = X.iloc[test_idx], y.iloc[test_idx]
 
-        model = ThresholdRegressor(threshold_col="ear_pct", threshold_val=30.0, alpha=1.0)
+        model = ThresholdRegressor(threshold_col="ear_pct", alpha=1.0)
         model.fit(X_train, y_train)
 
         y_pred_log = model.predict(X_test)
@@ -169,7 +213,7 @@ def main():
     model_params = {
         "model_type": "Threshold Autoregressive (TAR)",
         "threshold_variable": "ear_pct",
-        "threshold_value": 30.0,
+        "threshold_value": "estimated_via_hansen_grid",
         "internal_regressor": "Ridge",
         "ridge_hyperparameters": {
             "alpha": 1.0
