@@ -31,6 +31,7 @@ SCRIPTS = [
     "diebold_mariano.py",
     "diagnostico_avancado.py",
     "intervalos_previsao.py",
+    "backtest_intervalos.py",
 ]
 
 def main():

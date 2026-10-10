@@ -38,14 +38,30 @@ def main():
             if not all_pred:
                 continue
 
-            # Média dos desvios-padrão dos resíduos sobre todos os folds
-            sigma_mean = np.mean(residual_stds)
             all_pred = np.array(all_pred)
             all_real = np.array(all_real)
             all_dates = np.array(all_dates)
             
-            upper = all_pred + 1.96 * sigma_mean
-            lower = all_pred - 1.96 * sigma_mean
+            # Conformal Prediction: Quantis empíricos dos resíduos fora da amostra (OOS)
+            residuals_oos = all_real - all_pred
+            q2_5 = np.percentile(residuals_oos, 2.5)
+            q97_5 = np.percentile(residuals_oos, 97.5)
+            
+            upper = all_pred + q97_5
+            lower = all_pred + q2_5
+            
+            # Limite mínimo físico para preços (sem PLD negativo estrutural)
+            lower = np.clip(lower, 0.0, None)
+            
+            # Salvar limites de cobertura para os testes de Kupiec e Christoffersen
+            df_limits = pd.DataFrame({
+                "data": all_dates,
+                "real": all_real,
+                "previsto": all_pred,
+                "limite_inferior": lower,
+                "limite_superior": upper
+            })
+            df_limits.to_csv(PRED_DIR / f"{model}_{sub}_intervalos.csv", index=False, sep=";")
 
             plt.figure(figsize=(12, 6))
             plt.plot(all_dates, all_real, label="Real", color="black", linewidth=1.5)
