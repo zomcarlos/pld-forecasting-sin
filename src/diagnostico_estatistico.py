@@ -109,7 +109,7 @@ def run_diagnostics(submercado: str):
     print("  Executando auto_arima...")
     auto_model = auto_arima(
         train_pld,
-        exogenous=train_exog.values,
+        X=train_exog.values,
         seasonal=True,
         m=SEASONAL_PERIOD,
         stepwise=True,

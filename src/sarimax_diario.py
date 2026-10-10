@@ -86,7 +86,7 @@ def run_sarimax_for_submercado(submercado: str):
             print("  Seleção de ordem (auto_arima)...")
             auto_model = auto_arima(
                 train_pld,
-                exogenous=train_exog.values,
+                X=train_exog.values,
                 seasonal=True,
                 m=SEASONAL_PERIOD,
                 stepwise=True,
