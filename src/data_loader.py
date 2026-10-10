@@ -108,11 +108,11 @@ def load_carga(submercado: str) -> pd.Series:
 
 
 def get_aligned_data(submercado: str) -> pd.DataFrame:
-    """Retorna DataFrame alinhado com PLD + todas as exógenas."""
+    """Retorna DataFrame alinhado com PLD + todas as exógenas defasadas em 1 dia (t-1)."""
     pld = load_pld(submercado)
-    ena = load_ena(submercado)
-    ear = load_ear(submercado)
-    carga = load_carga(submercado)
+    ena = load_ena(submercado).shift(1)
+    ear = load_ear(submercado).shift(1)
+    carga = load_carga(submercado).shift(1)
 
     # Interseção garante alinhamento temporal entre variáveis com diferentes coberturas de datas
     common_idx = pld.index.intersection(ena.index).intersection(ear.index).intersection(carga.index)
@@ -147,23 +147,19 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     # Primeira diferença defasada para capturar a direção da tendência recente
     feat_df["pld_diff_1"] = feat_df["pld"].shift(1) - feat_df["pld"].shift(2)
 
-    # --- ENA features ---
-    feat_df["ena_lag_1"] = feat_df["ena"].shift(1)
-    feat_df["ena_rolling_mean_7"] = feat_df["ena"].shift(1).rolling(7).mean()
-    feat_df["ena_rolling_mean_30"] = feat_df["ena"].shift(1).rolling(30).mean()
+    # --- ENA features (exógena já em t-1) ---
+    feat_df["ena_rolling_mean_7"] = feat_df["ena"].rolling(7).mean()
+    feat_df["ena_rolling_mean_30"] = feat_df["ena"].rolling(30).mean()
 
-    # --- EAR features (nível do reservatório) ---
-    feat_df["ear_lag_1"] = feat_df["ear_pct"].shift(1)
-    feat_df["ear_rolling_mean_7"] = feat_df["ear_pct"].shift(1).rolling(7).mean()
-    feat_df["ear_rolling_mean_30"] = feat_df["ear_pct"].shift(1).rolling(30).mean()
-    # Variação do nível do reservatório (enchendo ou esvaziando?)
-    # Trajetória de recarga/depleção é determinante para a expectativa de formação do preço
-    feat_df["ear_diff_1"] = feat_df["ear_pct"].shift(1) - feat_df["ear_pct"].shift(2)
-    feat_df["ear_diff_7"] = feat_df["ear_pct"].shift(1) - feat_df["ear_pct"].shift(8)
+    # --- EAR features (nível do reservatório em t-1) ---
+    feat_df["ear_rolling_mean_7"] = feat_df["ear_pct"].rolling(7).mean()
+    feat_df["ear_rolling_mean_30"] = feat_df["ear_pct"].rolling(30).mean()
+    # Variação do nível do reservatório
+    feat_df["ear_diff_1"] = feat_df["ear_pct"] - feat_df["ear_pct"].shift(1)
+    feat_df["ear_diff_7"] = feat_df["ear_pct"] - feat_df["ear_pct"].shift(7)
 
-    # --- CARGA features (demanda) ---
-    feat_df["carga_lag_1"] = feat_df["carga"].shift(1)
-    feat_df["carga_rolling_mean_7"] = feat_df["carga"].shift(1).rolling(7).mean()
+    # --- CARGA features (demanda em t-1) ---
+    feat_df["carga_rolling_mean_7"] = feat_df["carga"].rolling(7).mean()
 
     # --- Features calendário ---
     # Capturam sazonalidade e padrão de menor demanda/preço aos finais de semana
