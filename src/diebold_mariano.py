@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 from scipy import stats
 import itertools
+from statsmodels.stats.multitest import multipletests
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PRED_DIR = BASE_DIR / "output" / "predictions"
@@ -12,13 +13,20 @@ MODELS = ["naive_rw", "naive_seasonal", "sarimax", "tar", "ridge", "rf", "lightg
 SUBMERCADOS = ["SUL", "SUDESTE", "NORDESTE", "NORTE"]
 FOLDS = 4
 
-def diebold_mariano(e1, e2, h=1):
+def diebold_mariano(e1, e2, h=1, criterion="MAE"):
     """
     Teste DM bilateral com correção HLN para amostras finitas.
     e1, e2: erros de previsão (actual - predicted).
     h: horizonte de previsão.
+    criterion: 'MAE' (|e1| - |e2|) ou 'MSE' (e1^2 - e2^2).
     """
-    d = e1**2 - e2**2
+    if criterion == "MAE":
+        d = np.abs(e1) - np.abs(e2)
+    elif criterion == "MSE":
+        d = e1**2 - e2**2
+    else:
+        raise ValueError(f"Critério '{criterion}' não suportado. Use 'MAE' ou 'MSE'.")
+
     T = len(d)
     
     if T == 0:
@@ -67,20 +75,30 @@ def main():
             if e_all:
                 errors[model] = np.array(e_all)
                 
-        # Testar todos os pares
-        for m1, m2 in itertools.combinations(MODELS, 2):
-            if m1 in errors and m2 in errors:
-                stat, pval = diebold_mariano(errors[m1], errors[m2], h=1)
-                
-                results.append({
-                    "submercado": sub,
-                    "modelo_1": m1,
-                    "modelo_2": m2,
-                    "dm_statistic": stat,
-                    "p_value": pval,
-                    "loss_function": "MSE",
-                    "significativo_5pct": pval < 0.05 if not np.isnan(pval) else False
-                })
+        # Testar todos os pares para MAE e MSE
+        for loss in ["MAE", "MSE"]:
+            sub_pairs = []
+            p_vals = []
+            for m1, m2 in itertools.combinations(MODELS, 2):
+                if m1 in errors and m2 in errors:
+                    stat, pval = diebold_mariano(errors[m1], errors[m2], h=1, criterion=loss)
+                    sub_pairs.append({
+                        "submercado": sub,
+                        "modelo_1": m1,
+                        "modelo_2": m2,
+                        "dm_statistic": stat,
+                        "p_value": pval,
+                        "loss_function": loss
+                    })
+                    p_vals.append(pval if not np.isnan(pval) else 1.0)
+            
+            # Correção de Holm-Bonferroni para comparações múltiplas no submercado
+            if p_vals:
+                _, p_adj, _, _ = multipletests(p_vals, method="holm")
+                for i, pair in enumerate(sub_pairs):
+                    pair["p_value_adj"] = p_adj[i]
+                    pair["significativo_5pct"] = p_adj[i] < 0.05
+                    results.append(pair)
 
     if results:
         df_results = pd.DataFrame(results)
@@ -91,3 +109,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
