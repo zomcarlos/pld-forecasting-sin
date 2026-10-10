@@ -84,7 +84,7 @@ def run_rf_for_submercado(submercado: str):
         if "criterion" in clf_params:
             del clf_params["criterion"]
             
-        from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+        from sklearn.ensemble import RandomForestClassifier
         final_clf = RandomForestClassifier(**clf_params)
         final_reg = RandomForestRegressor(**best_params)
         

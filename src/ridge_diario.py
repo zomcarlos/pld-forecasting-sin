@@ -83,9 +83,13 @@ def run_ridge_for_submercado(submercado: str):
         best_reg = grid.best_estimator_
         
         best_params = best_reg.get_params()
-        from sklearn.linear_model import RidgeClassifier, Ridge
+        from sklearn.linear_model import LogisticRegression
         
-        final_clf = RidgeClassifier(**best_params)
+        # LogisticRegression utiliza 'C', que é o inverso do 'alpha' do Ridge
+        alpha = best_params.get('alpha', 1.0)
+        c_val = 1.0 / alpha if alpha > 0 else 1.0
+        
+        final_clf = LogisticRegression(C=c_val, random_state=best_params.get('random_state', 42), max_iter=1000)
         final_reg = Ridge(**best_params)
         
         # Pega as colunas de piso/teto da base NÃO normalizada
