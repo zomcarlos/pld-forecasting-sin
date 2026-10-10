@@ -159,12 +159,23 @@ def run_ml_for_submercado(submercado: str):
         all_y_pred.extend(y_pred)
         all_rmse.extend([fold_rmse] * len(y_test))
 
-        # Importância calculada pelo número de vezes que cada feature foi usada nas divisões das árvores
-        last_importance = pd.DataFrame({
-            "feature": feature_cols,
-            "importance": final_reg.feature_importances_,
-        }).sort_values("importance", ascending=False)
-        
+        # Permutation Importance no conjunto de teste para avaliação out-of-sample robusta
+        from sklearn.inspection import permutation_importance
+        pi = permutation_importance(
+            final_reg, X_test, y_test, n_repeats=5, random_state=42, scoring="neg_mean_absolute_error"
+        )
+        if fold == 0:
+            accumulated_importances = pi.importances_mean
+        else:
+            accumulated_importances += pi.importances_mean
+            
+    # Média das importâncias por permutação ao longo de todos os folds
+    accumulated_importances /= N_SPLITS
+    last_importance = pd.DataFrame({
+        "feature": feature_cols,
+        "importance": accumulated_importances,
+    }).sort_values("importance", ascending=False)
+    
     all_y_pred = np.array(all_y_pred)
     all_rmse = np.array(all_rmse)
     

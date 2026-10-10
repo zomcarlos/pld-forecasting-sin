@@ -126,12 +126,23 @@ def run_ridge_for_submercado(submercado: str):
         all_y_pred.extend(y_pred)
         all_rmse.extend([fold_rmse] * len(y_test))
 
-        # Magnitude indica força da feature; sinal indica direção do impacto no preço
-        last_coef = pd.DataFrame({
-            "feature": feature_cols,
-            "coef_abs": np.abs(best_ridge_estimator.coef_),
-            "coef": best_ridge_estimator.coef_
-        }).sort_values("coef_abs", ascending=False)
+        # Permutation Importance no conjunto de teste para avaliação out-of-sample robusta
+        from sklearn.inspection import permutation_importance
+        pi = permutation_importance(
+            best_ridge_estimator, X_test_scaled, y_test, n_repeats=5, random_state=42, scoring="neg_mean_absolute_error"
+        )
+        if fold == 0:
+            accumulated_importances = pi.importances_mean
+        else:
+            accumulated_importances += pi.importances_mean
+            
+    # Média das importâncias por permutação ao longo de todos os folds
+    accumulated_importances /= N_SPLITS
+    last_coef = pd.DataFrame({
+        "feature": feature_cols,
+        "coef_abs": accumulated_importances,
+        "coef": accumulated_importances # O sinal não é preservado pela permutação, usaremos valor absoluto no plot
+    }).sort_values("coef_abs", ascending=False)
         
     all_y_pred = np.array(all_y_pred)
     all_rmse = np.array(all_rmse)

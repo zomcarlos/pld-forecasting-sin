@@ -152,16 +152,17 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # --- Estatísticas rolantes do PLD ---
     # shift(1) antes da janela móvel evita vazamento de dados (data leakage) na predição
-    for window in [7, 14, 30]:
+    for window in [14, 30]:  # window=7 removido para evitar redundância linear perfeita com lags 1-7
         feat_df[f"pld_rolling_mean_{window}"] = feat_df["pld"].shift(1).rolling(window).mean()
+        
+    for window in [7, 14, 30]:
         feat_df[f"pld_rolling_std_{window}"] = feat_df["pld"].shift(1).rolling(window).std()
 
     feat_df["pld_rolling_min_7"] = feat_df["pld"].shift(1).rolling(7).min()
     feat_df["pld_rolling_max_7"] = feat_df["pld"].shift(1).rolling(7).max()
 
     # --- Momentum ---
-    # Primeira diferença defasada para capturar a direção da tendência recente
-    feat_df["pld_diff_1"] = feat_df["pld"].shift(1) - feat_df["pld"].shift(2)
+    # pld_diff_1 removido para evitar redundância linear exata (pld_lag_1 - pld_lag_2)
 
     # --- ENA features (exógena já em t-1) ---
     feat_df["ena_rolling_mean_7"] = feat_df["ena"].rolling(7).mean()
